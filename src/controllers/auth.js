@@ -1,8 +1,9 @@
 const catchAsync = require("../utils/catchAsync");
 const User = require("../models/User");
-const generateToken = require("../utils/generateToken");
+const { generateToken, setTokenCookie } = require("../utils/token");
 const AppError = require("../utils/AppError");
 const AppResponse = require("../utils/AppResponse");
+require("../config");
 
 const registerUser = catchAsync(async (req, res, next) => {
   const { fullName, email, password, avatar } = req.body;
@@ -19,47 +20,31 @@ const registerUser = catchAsync(async (req, res, next) => {
     password,
     avatar,
   });
+  user.password = undefined;
+  if (!user) return next(new AppError("Failed to create user", 500));
 
-  if (user)
-    AppResponse(
-      res,
-      201,
-      {
-        user: {
-          _id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          avatar: user.avatar,
-          token: generateToken(user._id),
-          isAdmin: user.isAdmin,
-        },
-      },
-      "Registeration successful"
-    );
+  AppResponse(res, 201, user, "Registeration successful");
 });
 
 const loginUser = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
-  if (user && (await user.matchPassword(password))) {
-    AppResponse(
-      res,
-      200,
-      {
-        user: {
-          _id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          avatar: user.avatar,
-          token: generateToken(user._id),
-          isAdmin: user.isAdmin,
-        },
-      },
-      "Login successful"
-    );
-  } else {
-    next(new AppError("Invalid email or password", 400));
+  if (!user) {
+    return next(new AppError("User not found", 404));
   }
+  if (user.provider === "google") {
+    return next(
+      new AppError("Please log in using Google, not with email/password", 400)
+    );
+  }
+  if (user && (await user.matchPassword(password))) {
+    const token = generateToken(user._id);
+    setTokenCookie(res, token);
+    user.passsword = undefined;
+    return AppResponse(res, 200, user, "Login successful");
+  }
+
+  next(new AppError("Invalid email and password", 400));
 });
 
 module.exports = { registerUser, loginUser };

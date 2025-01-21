@@ -24,7 +24,7 @@ const UserSchema = mongoose.Schema(
     avatar: {
       type: String,
       default:
-        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+        "https://avatar.iran.liara.run/public/boy",
     },
     isAdmin: {
       type: Boolean,
@@ -37,8 +37,11 @@ const UserSchema = mongoose.Schema(
   }
 );
 
-UserSchema.methods.matchPassword = async function (password) {
-  return await bcrypt.compare(password, this.password);
+// Method to check password match
+UserSchema.methods.matchPassword = async function (enteredPassword) {
+  // If no password is provided, return false
+  if (!enteredPassword) return false;
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 UserSchema.pre("save", async function (next) {

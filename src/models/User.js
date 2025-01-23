@@ -23,8 +23,7 @@ const UserSchema = mongoose.Schema(
     provider: { type: String, default: "local" },
     avatar: {
       type: String,
-      default:
-        "https://avatar.iran.liara.run/public/boy",
+      default: "",
     },
     isAdmin: {
       type: Boolean,
@@ -36,6 +35,14 @@ const UserSchema = mongoose.Schema(
     timestamps: true,
   }
 );
+
+// Pre-save hook to set the avatar if it's not already set
+UserSchema.pre('save', function (next) {
+  if (!this.avatar) {
+    this.avatar = `https://avatar.iran.liara.run/public/${Math.floor(Math.random() * 100) + 1}`;
+  }
+  next();
+});
 
 // Method to check password match
 UserSchema.methods.matchPassword = async function (enteredPassword) {

@@ -31,18 +31,49 @@ const accessChat = catchAsync(async (req, res, next) => {
 });
 
 const getAllChats = catchAsync(async (req, res, next) => {
-  let chat = await Chat.find({
+  // Pagination parameters
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  // Fetch total count of chats (for pagination metadata)
+  const totalChats = await Chat.countDocuments({
+    users: { $elemMatch: { $eq: req.user.id } },
+  });
+
+  // Fetch paginated chats
+  let chats = await Chat.find({
     users: { $elemMatch: { $eq: req.user.id } },
   })
     .populate("users", "-password")
     .populate("groupAdmins", "-password")
     .populate("latestMessage")
-    .sort({ updatedAt: -1 });
-  chat = await User.populate(chat, {
+    .sort({ updatedAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // Populate the latest message sender
+  chats = await User.populate(chats, {
     path: "latestMessage.sender",
     select: "name avatar email",
   });
-  AppResponse(res, 200, chat, "Chats fetched successfully");
+
+  // Prepare pagination metadata
+  const totalPages = Math.ceil(totalChats / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+
+  return AppResponse(res, 200, {
+    chats,
+    pagination: {
+      currentPage: page,
+      totalPages,
+      totalChats,
+      limit,
+      hasNextPage,
+      hasPrevPage,
+    },
+  }, "Chats fetched successfully");
 });
 
 const createGroupChat = catchAsync(async (req, res, next) => {
@@ -98,15 +129,54 @@ const getGroupChat = catchAsync(async (req, res, next) => {
 });
 
 const getAllGroupChats = catchAsync(async (req, res) => {
+  // Pagination parameters
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+
+  // Fetch total count of group chats (for pagination metadata)
+  const totalGroupChats = await Chat.countDocuments({
+    users: { $elemMatch: { $eq: req.user.id } },
+    isGroupChat: true,
+  });
+
+  // Fetch paginated group chats
   const groupChats = await Chat.find({
     users: { $elemMatch: { $eq: req.user.id } },
     isGroupChat: true,
   })
     .populate("users", "-password")
     .populate("groupAdmins", "-password")
-    .sort({ updatedAt: -1 });
-  if (!groupChats.length) AppResponse(res, 200, [], "No group chats found.");
-  AppResponse(res, 200, groupChats, "Group Chats Fetched Successfully");
+    .sort({ updatedAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  // If no group chats are found, return an empty array
+  if (!groupChats.length) {
+    return AppResponse(res, 200, [], "No group chats found.");
+  }
+
+  // Prepare pagination metadata
+  const totalPages = Math.ceil(totalGroupChats / limit);
+  const hasNextPage = page < totalPages;
+  const hasPrevPage = page > 1;
+
+  return AppResponse(
+    res,
+    200,
+    {
+      groupChats,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalGroupChats,
+        limit,
+        hasNextPage,
+        hasPrevPage,
+      },
+    },
+    "Group Chats Fetched Successfully"
+  );
 });
 
 const renameGroupChat = catchAsync(async (req, res, next) => {

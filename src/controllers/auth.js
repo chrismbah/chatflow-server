@@ -30,7 +30,7 @@ const loginUser = catchAsync(async (req, res, next) => {
   const { email, password } = req.body;
   const user = await User.findOne({ email });
   if (!user) {
-    return next(new AppError("User not found", 404));
+    return next(new AppError("Invalid email or password", 404));
   }
   if (user.provider === "google") {
     return next(
@@ -40,7 +40,7 @@ const loginUser = catchAsync(async (req, res, next) => {
   if (user && (await user.matchPassword(password))) {
     const token = generateToken(user._id);
     setTokenCookie(res, token);
-    user.passsword = undefined;
+    user.password = undefined;
     return AppResponse(res, 200, user, "Login successful");
   }
 

@@ -14,7 +14,7 @@ const getUserProfile = catchAsync(async (req, res, next) => {
   if (!user) {
     return next(new AppError("User not found", 404));
   }
-  return AppResponse(res,200, user)
+  return AppResponse(res, 200, user);
 });
 
 const getAllUsers = catchAsync(async (req, res, next) => {
@@ -27,7 +27,7 @@ const getAllUsers = catchAsync(async (req, res, next) => {
   const userSearch = req.query.search
     ? {
         $or: [
-          { name: { $regex: req.query.search, $options: "i" } },
+          { fullName: { $regex: req.query.search, $options: "i" } },
           { email: { $regex: req.query.search, $options: "i" } },
         ],
       }

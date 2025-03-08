@@ -15,7 +15,7 @@ router.get(
 // Google OAuth callback
 router.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/login" }),
+  passport.authenticate("google", { failureRedirect: "/auth/login", session: false }),
   (req, res) => {
     // Successful authentication
     const token = generateToken(req.user._id); // Generate JWT

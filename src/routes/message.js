@@ -1,15 +1,13 @@
 const express = require("express");
 const validateToken = require("../middlewares/validateToken");
 const {
-  createMessage,
+  sendMessage,
   getMessagesByChatId,
-  updateMessageReadStatus,
   deleteMessage,
 } = require("../controllers/message");
 
 const router = express.Router();
-router.post("/", validateToken, createMessage);
+router.post("/", validateToken, sendMessage);
 router.get("/", validateToken, getMessagesByChatId);
-router.patch("/:messageId/read", validateToken, updateMessageReadStatus);
 router.delete("/:messageId", validateToken, deleteMessage);
 module.exports = router;

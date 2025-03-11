@@ -1,10 +1,11 @@
 const Message = require("../models/Message");
 const Chat = require("../models/Chat");
+const User = require("../models/User");
 const AppResponse = require("../utils/AppResponse");
 const catchAsync = require("../utils/catchAsync");
 const AppError = require("../utils/AppError");
 
-const createMessage = catchAsync(async (req, res, next) => {
+const sendMessage = catchAsync(async (req, res, next) => {
   const { chatId, content } = req.body;
 
   // Validate input
@@ -24,28 +25,34 @@ const createMessage = catchAsync(async (req, res, next) => {
   }
 
   // Create message
-  const message = await Message.create({
+  let message = await Message.create({
     sender: req.user.id,
     content,
     chat: chatId,
   });
 
   // Populate sender details
-  await message.populate("sender", "fullName avatar");
+  message = await message.populate("sender", "fullName avatar");
+  message = await message.populate("chat");
+  message = await User.populate(message, {
+    path: "chat.users",
+    select: "fullName avatar email",
+  });
 
   // Update latest message in chat
   await Chat.findByIdAndUpdate(chatId, {
-    latestMessage: message._id,
+    latestMessage: message,
+  });
+  message = await Chat.populate(message, {
+    path: "chat.latestMessage",
   });
 
   // Respond with created message
   AppResponse(res, 201, message, "Message sent successfully");
 });
 
-
 const getMessagesByChatId = catchAsync(async (req, res, next) => {
   const { chatId } = req.query;
-  console.log(chatId);
   // Check if chat exists
   if (!chatId) next(new AppError("Chat Id invalid", 403));
   const chat = await Chat.findById(chatId);
@@ -69,27 +76,6 @@ const getMessagesByChatId = catchAsync(async (req, res, next) => {
   AppResponse(res, 200, messages, "Messages retrieved successfully");
 });
 
-const updateMessageReadStatus = catchAsync(async (req, res, next) => {
-  const { messageId } = req.params;
-
-  const message = await Message.findById(messageId);
-  if (!message) return next(new AppError("Message not found", 404));
-
-  if (message.read) {
-    return AppResponse(res, 200, message, "Message already read");
-  }
-
-  message.read = true;
-  await message.save();
-
-  // Emit the message read event
-  req.io.to(message.chat.toString()).emit("message_read", {
-    messageId: message._id,
-    chatId: message.chat,
-  });
-
-  AppResponse(res, 200, message, "Message marked as read");
-});
 const deleteMessage = catchAsync(async (req, res, next) => {
   const { messageId } = req.params;
 
@@ -112,8 +98,8 @@ const deleteMessage = catchAsync(async (req, res, next) => {
 });
 
 module.exports = {
-  createMessage,
+  sendMessage,
   getMessagesByChatId,
-  updateMessageReadStatus,
+  // updateMessageReadStatus,
   deleteMessage,
 };

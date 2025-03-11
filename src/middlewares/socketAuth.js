@@ -6,6 +6,7 @@ const socketAuthMiddleware = (socket, next) => {
   const token =
     socket.handshake.auth.token ||
     socket.handshake.headers.cookie?.split("token=")[1];
+  console.log("Token: " + token);
 
   if (!token) {
     return next(new Error("Authorization token is missing"));

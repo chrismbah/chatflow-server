@@ -1,3 +1,5 @@
+const Message = require("../models/Message");
+
 const socketHandler = (io) => {
   io.on("connection", (socket) => {
     console.log("Connected to socket.io");
@@ -28,6 +30,22 @@ const socketHandler = (io) => {
       const chat = newMessageReceived.chat;
       socket.in(chat).emit("message_received", newMessageReceived);
       console.log("New message emitted to room:", chat);
+    });
+
+    socket.on("read_messages", async ({ chatId, userId }) => {
+      try {
+        // Update messages in database
+        await Message.updateMany(
+          { chat: chatId, readBy: { $ne: userId } },
+          { $addToSet: { readBy: userId } }
+        );
+
+        // Notify other users
+        socket.in(chatId).emit("messages_read", { chatId, userId });
+        console.log(`User ${userId} just read all messages in chat ${chatId}`);
+      } catch (error) {
+        console.error("Error marking messages as read:", error);
+      }
     });
 
     socket.on("disconnect", () => {

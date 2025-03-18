@@ -97,9 +97,32 @@ const deleteMessage = catchAsync(async (req, res, next) => {
   AppResponse(res, 200, null, "Message deleted successfully");
 });
 
+const markMessagesAsRead = catchAsync(async (req, res, next) => {
+  const { chatId } = req.body;
+  if (!chatId) next(new AppError("Chat Id invalid", 403));
+  const chat = await Chat.findById(chatId);
+  if (!chat) {
+    return next(new AppError("Chat not found", 404));
+  }
+  // Find all unread messages in this chat that the user hasn't read
+  const messages = await Message.find({
+    chat: chatId,
+    readBy: { $ne: req.user.id }, // Only update if user hasn't read it
+  });
+  if (messages.length === 0) {
+    return AppResponse(res, 200, null, "No unread messages found");
+  }
+  // Mark messages as read by adding the user to the `readBy` array
+  await Message.updateMany(
+    { _id: { $in: messages.map((msg) => msg._id) } },
+    { $addToSet: { readBy: req.user.id } } // Prevents duplicates
+  );
+  return AppResponse(res, 200, null, "Messages marked as read");
+});
+
 module.exports = {
   sendMessage,
   getMessagesByChatId,
-  // updateMessageReadStatus,
+  markMessagesAsRead,
   deleteMessage,
 };

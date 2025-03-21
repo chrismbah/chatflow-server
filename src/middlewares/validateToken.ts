@@ -42,6 +42,7 @@ export const validateToken = (
           return next(new AppError("Invalid token payload", 401));
         }
         req.user = decoded;
+        console.log(req.user)
         next();
       }
     );

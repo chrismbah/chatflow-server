@@ -1,7 +1,9 @@
-const AppResponse = require("../utils/AppResponse");
-const { NODE_ENV } = require("../config");
+import AppResponse from "../utils/AppResponse";
+import "../config";
+import { Request, Response, NextFunction } from "express";
 
-const devError = (err, res) => {
+const NODE_ENV = process.env.NODE_ENV;
+const devError = (err: any, res: Response) => {
   AppResponse(res, err.statusCode, {
     status: err.status,
     error: err,
@@ -11,7 +13,7 @@ const devError = (err, res) => {
 };
 
 // Error Handler for Production Environment
-const prodError = (err, res) => {
+const prodError = (err: any, res: Response) => {
   if (err.isOperational) {
     AppResponse(res, err.statusCode, {
       status: err.status,
@@ -24,9 +26,15 @@ const prodError = (err, res) => {
 };
 
 // Global Error Handling Middleware
-const globalErrorHandler = (err, req, res, next) => {
+const globalErrorHandler = (
+  err: any,
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "error";
+
   if (NODE_ENV === "development") {
     devError(err, res);
   } else {
@@ -34,4 +42,4 @@ const globalErrorHandler = (err, req, res, next) => {
   }
 };
 
-module.exports = globalErrorHandler;
+export default globalErrorHandler;

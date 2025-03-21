@@ -1,22 +1,28 @@
-const express = require("express");
-const validateToken = require("../middlewares/validateToken");
-const {
+import express from "express";
+import validateToken from "../middlewares/validateToken";
+import checkGroupAdmin from "../middlewares/checkGroupAdmin";
+
+import {
   accessChat,
   getAllChats,
   createGroupChat,
   renameGroupChat,
   removeUserFromGroupChat,
   addUserToGroupChat,
-  getAllGroupChats, getGroupChat
-} = require("../controllers/chat");
-const checkGroupAdmin = require("../middlewares/checkGroupAdmin");
+  getAllGroupChats,
+  getGroupChat,
+} from "../controllers/chat";
+
 const router = express.Router();
 
+// Private chat routes
 router.post("/", validateToken, accessChat);
 router.get("/", validateToken, getAllChats);
+
+// Group chat routes
 router.get("/groups", validateToken, getAllGroupChats);
-router.post("/group-create", validateToken, createGroupChat);
 router.get("/group/:groupId", validateToken, getGroupChat);
+router.post("/group-create", validateToken, createGroupChat);
 router.put(
   "/group-rename/:groupId",
   validateToken,
@@ -36,4 +42,4 @@ router.put(
   addUserToGroupChat
 );
 
-module.exports = router;
+export default router;

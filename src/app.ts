@@ -52,6 +52,9 @@ app.use(passport.session());
 connectDB();
 
 // Setup API routes
+app.use("/", (req, res) => {
+  res.json("This is the root route");
+});
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/chat", chatRoutes);

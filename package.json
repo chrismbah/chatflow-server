@@ -9,8 +9,7 @@
     "seed": "ts-node src/scripts/seedUsers.ts",
     "build:ui": "@powershell Remove-Item -Recurse -Force dist && cd ../frontend && npm run build && @powershell Copy-Item -Recurse dist ../backend",
     "lint": "eslint .",
-    "vercel-build": "echo hello"
-
+    "vercel-build": "tsc"
   },
   "keywords": [],
   "author": "",

@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import { faker } from "@faker-js/faker";
-import User from "./models/User"; // Adjust the path to your User model
-import "./config";
+import User from "../models/User"; // Adjust the path to your User model
+import "../config";
 const MONGO_URI = process.env.MONGO_URI;
 
 const seedUsers = async () => {
@@ -9,9 +9,9 @@ const seedUsers = async () => {
     await mongoose.connect(MONGO_URI as string);
     console.log("Connected to MongoDB");
 
-    let users = []
+    let users = [];
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 100; i++) {
       users.push({
         fullName: faker.person.fullName(),
         email: faker.internet.email(),

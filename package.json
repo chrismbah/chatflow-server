@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "npx nodemon src/app.ts",
     "dev": "npx nodemon src/app.ts",
-    "seed": "ts-node src/seedUsers.ts"
+    "seed": "ts-node src/scripts/seedUsers.ts"
   },
   "keywords": [],
   "author": "",

@@ -4,56 +4,27 @@
 
 // Minimal version for debugging
 import express from "express";
-import "../src/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import mongoose from "mongoose";
-import passport from "passport";
-import session from "express-session";
-import logger from "morgan";
-import { Server } from "socket.io";
-import http from "http";
-import "colors";
-
-// Import configuration & setup
-import "./config";
-import "./config/passport";
-
-// Import middlewares
-import globalErrorHandler from "../src/middlewares/globalErrorHandler";
-import invalidRoute from "../src/middlewares/invalidRoute";
-
-// Import routes
-import authRoutes from "../src/routes/auth";
-import usersRoutes from "../src/routes/user";
-import chatRoutes from "../src/routes/chat";
-import messageRoutes from "../src/routes/message";
-
-// Import Socket.IO handler
-import socketHandler from "../src/socket";
+import "../src/config"
+// Create a simple Express app
 
 const app = express();
-const server = http.createServer(app);
 
-const corsOptions = {
-  origin: process.env.CLIENT_URL ?? "http://localhost:3000",
-  credentials: true,
-};
+// Add error handling for uncaught exceptions
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught Exception:", error);
+});
 
-const sessionOptions = {
-  secret: process.env.SESSION_SECRET!,
-  resave: false,
-  saveUninitialized: true,
-};
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+});
 
 // Basic middleware
-app.use(logger("dev"));
 app.use(express.json());
-app.use(cors(corsOptions));
+app.use(cors());
 app.use(cookieParser());
-app.use(session(sessionOptions));
-app.use(passport.initialize());
-app.use(passport.session());
 
 // Safe MongoDB connection function
 const connectDB = async () => {
@@ -64,6 +35,7 @@ const connectDB = async () => {
     }
 
     // Set connection options with timeouts to prevent hanging
+
 
     await mongoose.connect(process.env.MONGO_URI);
     console.log("MongoDB connected successfully");
@@ -126,40 +98,6 @@ app.use(
     });
   }
 );
-// Setup API routes
-app.use("/api/auth", authRoutes);
-app.use("/api/users", usersRoutes);
-app.use("/api/chat", chatRoutes);
-app.use("/api/message", messageRoutes);
-
-// Root route should come after specific routes
-app.get("/", (req, res) => {
-  res.json("This is the root route");
-});
-
-// Error handling middlewares
-app.use(invalidRoute);
-app.use(globalErrorHandler);
-
-// Setup WebSocket server
-const io = new Server(server, {
-  pingTimeout: 25000,
-  cors: {
-    origin: process.env.CLIENT_URL ?? "http://localhost:3000",
-    credentials: true,
-  },
-});
-
-socketHandler(io);
-
-// Only start the server if not running in Vercel
-if (process.env.NODE_ENV !== "production") {
-  server.listen(process.env.PORT ?? 5000, () => {
-    console.log(
-      `Server listening on port ${process.env.PORT ?? 5000}`.yellow.bold
-    );
-  });
-}
 
 // Try to connect to MongoDB but don't let it crash the app if it fails
 connectDB()

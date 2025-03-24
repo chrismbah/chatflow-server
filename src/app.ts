@@ -52,13 +52,15 @@ app.use(passport.session());
 connectDB();
 
 // Setup API routes
-app.use("/", (req, res) => {
-  res.json("This is the root route");
-});
 app.use("/api/auth", authRoutes);
 app.use("/api/users", usersRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/message", messageRoutes);
+
+// Root route should come after specific routes
+app.get("/", (req, res) => {
+  res.json("This is the root route");
+});
 
 // Error handling middlewares
 app.use(invalidRoute);
@@ -75,9 +77,13 @@ const io = new Server(server, {
 
 socketHandler(io);
 
-// Start the server
-server.listen(process.env.PORT, () => {
-  console.log(`Server listening on port ${process.env.PORT}`.yellow.bold);
-});
+// Only start the server if not running in Vercel
+if (process.env.NODE_ENV !== "production") {
+  server.listen(process.env.PORT ?? 5000, () => {
+    console.log(
+      `Server listening on port ${process.env.PORT ?? 5000}`.yellow.bold
+    );
+  });
+}
 
-export { server };
+export { app, server };

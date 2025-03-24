@@ -23,7 +23,7 @@ app.get("/", (req: Request, res: Response) => {
     status: "ok",
     message: "Debug API is running",
     nodeEnv: process.env.NODE_ENV,
-    hasMongoURI: !!process.env.MONGODB_URI,
+    hasMongoURI: !!process.env.MONGO_URI,
     hasSessionSecret: !!process.env.SESSION_SECRET,
   });
 });

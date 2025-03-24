@@ -174,4 +174,4 @@ connectDB()
     console.error("Error during MongoDB initialization:", err);
   });
 
-export default server;
+export default app;

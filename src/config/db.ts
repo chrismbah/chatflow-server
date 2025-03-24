@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import "./index.ts"; // Ensure this correctly initializes necessary configurations
+import "./index"; // Ensure this correctly initializes necessary configurations
 
 const connectDB = async () => {
   try {

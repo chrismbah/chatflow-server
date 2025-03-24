@@ -8,6 +8,7 @@ import "../src/config";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import mongoose from "mongoose";
+import "../src/config"
 // Create a simple Express app
 const app = express();
 
@@ -34,12 +35,9 @@ const connectDB = async () => {
     }
 
     // Set connection options with timeouts to prevent hanging
-    const options = {
-      serverSelectionTimeoutMS: 5000, // 5 seconds
-      connectTimeoutMS: 10000, // 10 seconds
-    };
 
-    await mongoose.connect(process.env.MONGO_URI, options);
+
+    await mongoose.connect(process.env.MONGO_URI as string);
     console.log("MongoDB connected successfully");
     return true;
   } catch (error) {
@@ -76,7 +74,6 @@ app.get("/api/users", async (req, res) => {
       dbState: mongoose.connection.readyState,
     });
   }
-
   res
     .status(200)
     .json([{ id: "1", name: "Test User", email: "test@example.com" }]);

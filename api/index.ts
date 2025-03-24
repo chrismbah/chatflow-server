@@ -28,7 +28,7 @@ app.use(cookieParser());
 // Safe MongoDB connection function
 const connectDB = async () => {
   try {
-    if (!process.env.MONGODB_URI) {
+    if (!process.env.MONGO_URI) {
       console.error("MongoDB URI is not defined in environment variables");
       return false;
     }
@@ -39,7 +39,7 @@ const connectDB = async () => {
       connectTimeoutMS: 10000, // 10 seconds
     };
 
-    await mongoose.connect(process.env.MONGODB_URI, options);
+    await mongoose.connect(process.env.MONGO_URI, options);
     console.log("MongoDB connected successfully");
     return true;
   } catch (error) {
@@ -64,7 +64,7 @@ app.get("/", async (req, res) => {
     message: "API with MongoDB is running",
     nodeEnv: process.env.NODE_ENV,
     mongoDbStatus: dbStatus[dbState as 0 | 1 | 2 | 3],
-    hasMongoURI: !!process.env.MONGODB_URI,
+    hasMongoURI: !!process.env.MONGO_URI,
   });
 });
 

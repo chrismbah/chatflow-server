@@ -30,7 +30,6 @@ const getUserProfile = catchAsync(
 const getAllUsers = catchAsync(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { page = "1", limit = "10", search }: GetAllUsersQuery = req.query;
-
     // Convert query parameters to numbers
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 10;

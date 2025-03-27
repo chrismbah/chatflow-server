@@ -6,8 +6,7 @@ import AppError from "../utils/AppError";
 import AppResponse from "../utils/AppResponse";
 import { findDirectChat } from "../helpers/chat";
 import { AuthenticatedRequest } from "../types";
-import { NextFunction, Response } from "express"; 
-
+import { NextFunction, Response } from "express";
 const accessChat = catchAsync(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.body as { userId: string };
@@ -40,6 +39,8 @@ const accessChat = catchAsync(
       const fullChat = await Chat.findOne({ _id: createdChat._id })
         .populate("users", "-password")
         .select("-groupAdmins");
+      // io.emit("new_chat_created", { chatId: createdChat._id });
+
       AppResponse(res, 201, fullChat);
     }
   }
@@ -52,6 +53,7 @@ const getAllChats = catchAsync(
       return next(new AppError("Not authenticated", 401));
     }
 
+    /*
     // Pagination parameters
     const page = parseInt((req.query.page as string) || "1") || 1;
     const limit = parseInt((req.query.limit as string) || "10") || 10;
@@ -83,23 +85,24 @@ const getAllChats = catchAsync(
     const totalPages = Math.ceil(totalChats / limit);
     const hasNextPage = page < totalPages;
     const hasPrevPage = page > 1;
+    */
 
-    return AppResponse(
-      res,
-      200,
-      {
-        chats,
-        pagination: {
-          currentPage: page,
-          totalPages,
-          totalChats,
-          limit,
-          hasNextPage,
-          hasPrevPage,
-        },
-      },
-      "Chats fetched successfully"
-    );
+    // Fetch all chats without pagination
+    let chats = await Chat.find({
+      users: { $elemMatch: { $eq: req.user.id } },
+    })
+      .populate("users", "-password")
+      .populate("groupAdmins", "-password")
+      .populate("latestMessage")
+      .sort({ updatedAt: -1 });
+
+    // Populate the latest message sender
+    chats = await Chat.populate(chats, {
+      path: "latestMessage.sender",
+      select: "name avatar email",
+    });
+
+    return AppResponse(res, 200, chats, "Chats fetched successfully");
   }
 );
 

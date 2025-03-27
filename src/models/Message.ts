@@ -3,7 +3,7 @@ import { Schema, model, Document, Types } from "mongoose";
 // Define an interface for TypeScript type safety
 export interface IMessage extends Document {
   sender: Types.ObjectId;
-  content: string;
+  content: string; 
   chat: Types.ObjectId;
   readBy: Types.ObjectId[];
   createdAt: Date;
